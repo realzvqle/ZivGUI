@@ -21,18 +21,34 @@ static int s_WindowWidth = 800;
 static int s_WindowHeight = 600;
 static WCHAR s_WindowTitle[64] = L"Unnamed Window\0";
 static BOOL s_FinishedDrawing = FALSE;
-static HANDLE s_hThread;
-DWORD WINAPI RenderWindow(LPVOID lpThreadParameter){
+static HANDLE s_hDrawThread;
+static HANDLE s_hRenderThread;
+
+DWORD WINAPI DrawWindow(LPVOID lpThreadParameter){
     while(s_IsClosed == FALSE){
         s_FinishedDrawing = FALSE;
         DrawRectangle(s_WindowX, s_WindowY, s_WindowWidth, 30, RGB(155, 155, 155));
         DrawRectangle(s_WindowX, s_WindowY + 30, s_WindowWidth, s_WindowHeight, RGB(255, 255, 255));
         s_FinishedDrawing = TRUE;
-        Sleep(500);
+        Sleep(2000);
     }
     
     return 0;
 }
+
+DWORD WINAPI RenderApplication(LPVOID lpThreadParameter) {
+    while(s_IsClosed == FALSE){
+        if(s_FinishedDrawing == FALSE) continue;
+        RECT rect;
+        GetClientRect(NULL, &rect);
+        InvalidateRect(NULL, &rect, TRUE);
+        BitBlt(s_DC, s_WindowX, s_WindowY, s_WindowWidth, s_WindowHeight, 
+                    s_BackDC, 0, 0, SRCCOPY);
+        Sleep(1);
+    }
+    
+}
+
 
 void InitZivGUI(int width, int height, WCHAR* title){
     s_WindowWidth = width;
@@ -42,11 +58,14 @@ void InitZivGUI(int width, int height, WCHAR* title){
     s_BackDC = CreateCompatibleDC(s_DC);
     s_BackBuffer = CreateCompatibleBitmap(s_DC, s_WindowWidth, s_WindowHeight);
     SelectObject(s_BackDC, s_BackBuffer);
-    s_hThread = CreateThread(NULL, 0, RenderWindow, NULL, 0, NULL);
+    s_hDrawThread = CreateThread(NULL, 0, DrawWindow, NULL, 0, NULL);
+    s_hRenderThread = CreateThread(NULL, 0, RenderApplication, NULL, 0, NULL);
+
 }
 
 void CloseZivGUI(){
-    CloseHandle(s_hThread);
+    CloseHandle(s_hDrawThread);
+    CloseHandle(s_hRenderThread);
     DeleteDC(s_BackDC);
     DeleteObject(s_BackBuffer);
     DeleteDC(s_DC);
@@ -80,14 +99,7 @@ void DrawRectangleEx(int x, int y, int width, int height, COLORREF color, DWORD 
     DeleteObject(brush);  
 }
 
-void DrawApplication() {
-    if(s_FinishedDrawing == FALSE) return;
-    RECT rect;
-    GetClientRect(NULL, &rect);
-    InvalidateRect(NULL, &rect, TRUE);
-    BitBlt(s_DC, s_WindowX, s_WindowY, s_WindowWidth, s_WindowHeight, 
-                s_BackDC, 0, 0, SRCCOPY);
-}
+
 
 
 void DrawRectangle(int x, int y, int width, int height, COLORREF color){

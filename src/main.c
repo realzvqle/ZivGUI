@@ -12,7 +12,7 @@ int wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int
     InitZivGUI(800, 600, L"hello");
     // IsWindowClosed() refreshes the entire screen so it doesn't look like its cloning
     while(!IsWindowClosed()){
-        DrawApplication();
+        
     }
     CloseZivGUI();
 

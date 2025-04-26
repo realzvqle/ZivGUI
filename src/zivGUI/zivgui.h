@@ -15,7 +15,6 @@ BOOL IsWindowClosed();
 void DrawRectangle(int x, int y, int width, int height, COLORREF color);
 int GetScreenWidth();
 int GetScreenHeight();
-void DrawApplication();
 int GetMouseX();
 int GetMouseY();
 #endif
